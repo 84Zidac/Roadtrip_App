@@ -1,16 +1,25 @@
-import Nav from "react-bootstrap/Nav";
-import NavDropdown from "react-bootstrap/NavDropdown";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
-import { useState, useContext } from "react";
-import { signIn } from "../utilities";
+import { useLoadScript, useJsApiLoader} from "@react-google-maps/api"
 import { UserContext } from "../App";
+import { useState, useContext, useEffect } from "react";
+import Map from "./Map";
 
-export default function roadTrip(){
+
+
+export function RoadTrip() {
     const { user } = useContext(UserContext);
     const { setUser } = useContext(UserContext);
-    console.log({...user}.user)
-    return(
-        <h1>This is the roadtrip page</h1>
-    )
+
+    const { isLoaded } = useLoadScript({
+        googleMapsApiKey: "YourKey",
+        libraries: ['places']
+    }
+
+    );
+    if (!isLoaded) {
+        return <div>Loading...</div>
+    }
+    return (<>
+    <h1>Welcome {user.name}</h1>
+    <Map />
+    </>)
 }

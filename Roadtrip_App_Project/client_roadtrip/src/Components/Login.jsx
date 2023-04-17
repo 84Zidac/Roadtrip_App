@@ -2,8 +2,8 @@ import Nav from "react-bootstrap/Nav";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import { useState, useContext } from "react";
-import { signIn } from "../utilities";
+import { useState, useContext, useEffect } from "react";
+import { signIn, currUser } from "../utilities";
 import { UserContext } from "../App";
 
 
@@ -13,6 +13,17 @@ export function Login() {
     const [password, setPassword] = useState("");
     const { user } = useContext(UserContext);
     const { setUser } = useContext(UserContext);
+
+    useEffect(() => {
+      const getCurrUser = async () => {
+        setUser(await currUser());
+      };
+      getCurrUser();
+    }, []);
+
+    console.log(user)
+
+
     return(
         <Nav>
             <NavDropdown title="Login" id="basic-nav-dropdown">

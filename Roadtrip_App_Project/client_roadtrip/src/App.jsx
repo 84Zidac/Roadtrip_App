@@ -24,7 +24,6 @@ function App() {
     <>
       <UserContext.Provider value={{ user, setUser }}>
       <Navigation />
-      <h1>{user && user.name}</h1>
         <Outlet />
       </UserContext.Provider>
     </>

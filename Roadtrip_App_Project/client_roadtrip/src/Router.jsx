@@ -6,7 +6,8 @@ import React from "react";
 import Navigation from "./Components/Navbar";
 import ErrorPage from "./Components/ErrorPage";
 import SignUp from "./Components/SignUp";
-import roadTrip from "./Components/RoadTrip";
+import HomePage from "./Components/Homepage";
+
 
 const Router = createHashRouter([
   {
@@ -16,16 +17,9 @@ const Router = createHashRouter([
     children: [
       {
         index: true,
-        element: <SignUp />,
+        element: <HomePage />,
       },
-        {
-          path: "/:userName/",
-          element: <roadTrip />,
-        },
-        {
-          path: "/tester/",
-          element: <roadTrip />,
-        },
+
     ],
   },
 ]);

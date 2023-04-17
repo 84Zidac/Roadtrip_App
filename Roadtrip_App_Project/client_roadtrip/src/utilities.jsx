@@ -7,7 +7,7 @@ export const signUp = async(name, email, password) => {
         'email' : email,
         'password' : password
     })
-    console.log(response.data.success)
+    // console.log(response.data.success)
     return response.data.success
 }
 
@@ -22,7 +22,7 @@ export const signIn = async(email, password, setUser) => {
     // console.log(response.data.name)
     console.log(response.data.login)
     if (response.data.login){
-        console.log('yes it made it in')
+        // console.log('yes it made it in')
         // window.location.href =("/tester/")
 
     }
@@ -30,7 +30,7 @@ export const signIn = async(email, password, setUser) => {
 
 export const currUser = async() =>{
     let response = await axios.get('/users/')
-    console.log(response.data)
+    // console.log(response.data)
     return response.data
 }
 
@@ -40,3 +40,5 @@ export const logOut = async(setUser) => {
         setUser(null)
     }
 }
+
+
