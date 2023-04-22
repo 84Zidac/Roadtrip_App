@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import api_view
 from django.contrib.auth import authenticate, login, logout
 from .models import App_User, Route, Waypoint
-from .utilities import sign_up, log_in, curr_user
+from .utilities import sign_up, log_in, curr_user, create_route, get_routes, create_waypoint, get_waypoint
 from django.core.serializers import serialize
 # from django.views.decorators.csrf import csrf_exempt
 
@@ -39,31 +39,31 @@ def index(request):
     # returns the index from React Project
     the_index = open('static/index.html')
     return HttpResponse(the_index)
-
-@api_view(['POST', 'GET'])
-def route_handler(request):
+        
+        
+@api_view(['POST', 'PUT', 'GET'])
+def routes_capabilities(request):
+ 
     if request.method == 'POST':
-        routes = list(Route.objects.filter(user_routes = request.user).values())
-        try:
-            route_name = request.data['name']
-            new_route = Route.objects.create(route_name=name, user=request.user)
-            new_route.save()
-            routes = list(Route.objects.filter(user_routes = request.user).values())
-            return JsonResponse({'routes': routes})
-        except Exception as e:
-            print(e)
-            return JsonResponse({'routes': routes})
-        
-        
-    elif request.method == 'GET':
-        try:
-            routes = list(Route.objects.filter(user_routes = request.user).values())
-            waypoints = list(Waypoint.objects.filter(route_waypoints= request.route).values())
-            
-            return JsonResponse({'routes': routes,
-                                 'waypoints': waypoints
-                                 })
-        except Exception as e:
-            print(e)
-            return JsonResponse({'routes': []})
-        
+        return create_route(request)
+    if request.method == 'GET':
+        return get_routes(request)
+    
+@api_view(['POST', 'PUT', 'GET'])
+def waypoints_capabilities(request):
+    if request.method == 'POST':
+        return create_waypoint(request)
+    if request.method == 'PUT':
+        # print(request.data)
+        return get_waypoint(request)
+ 
+@api_view(['POST'])   
+def delete_trip(request):
+    print (request.data)
+    Route.objects.filter(pk=request.data['id']).delete()
+    user = App_User.objects.filter(email=request.user)
+    routes = list(Route.objects.filter(user_routes = user[0]).values())
+
+    return HttpResponse({'success': True,
+                         'routes': routes})
+    

@@ -21,7 +21,7 @@ export function Login() {
       getCurrUser();
     }, []);
 
-    console.log(user)
+    // console.log(user)
 
 
     return(

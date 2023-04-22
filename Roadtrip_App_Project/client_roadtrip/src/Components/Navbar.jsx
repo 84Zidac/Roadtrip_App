@@ -18,8 +18,8 @@ export default function Navigation() {
     getCurrUser();
   }, []);
 
-  console.log(user)
-  console.log({...user}.name)
+  // console.log(user)
+  // console.log({...user}.name)
 
   return (
     <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">

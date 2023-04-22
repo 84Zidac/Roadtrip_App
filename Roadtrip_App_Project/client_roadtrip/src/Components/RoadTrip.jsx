@@ -8,10 +8,11 @@ import Map from "./Map";
 export function RoadTrip() {
     const { user } = useContext(UserContext);
     const { setUser } = useContext(UserContext);
+    const libraries =['places'];
 
     const { isLoaded } = useLoadScript({
-        googleMapsApiKey: "YourKey",
-        libraries: ['places']
+        googleMapsApiKey: "AIzaSyCcKuTsUr-jKyRUlILb3UFCUrETOhbZ8_0",
+        libraries,
     }
 
     );
