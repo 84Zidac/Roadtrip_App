@@ -1,7 +1,5 @@
 import {
   GoogleMap,
-  useLoadScript,
-  Marker,
   DirectionsRenderer,
 } from "@react-google-maps/api";
 import { useState, useRef, useEffect } from "react";
@@ -14,8 +12,7 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
-import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
-import ListGroup from 'react-bootstrap/ListGroup';
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 
 import {
   getCoordinates,
@@ -24,7 +21,11 @@ import {
   newWaypoint,
   getWaypoints,
   deleteTrip,
+  deleteWaypoint,
+  
 } from "../utilities";
+import Accordion from "react-bootstrap/Accordion";
+
 // *****================================================
 export default function Map() {
   const [center, setCenter] = useState({ lat: 38.4527935, lng: -99.9065136 });
@@ -39,6 +40,7 @@ export default function Map() {
   const [mapId, setMapId] = useState(null);
   const [waypoint, setWaypoint] = useState(null);
   const [waypointList, setWaypointList] = useState([]);
+  const [routeName, setRouteName] = useState(null);
   // ================================================
 
   useEffect(() => {
@@ -48,6 +50,9 @@ export default function Map() {
     };
     nowGetRoutes();
   }, []);
+  useEffect(() => {
+    console.log(`mapID: ${mapId}`)
+  },[mapId])
   // ================================================
 
   async function createWaypoint() {
@@ -56,11 +61,21 @@ export default function Map() {
     const Lat = waypointCoords.lat();
     const Lng = waypointCoords.lng();
     let waypoints = await newWaypoint(mapId, waypointName, Lat, Lng);
-    return waypoints;
+    if (waypoints) {
+      adjustMap({
+        destLat: destLat,
+        destLng: destLng,
+        orgLat: originLat,
+        orgLng: originLng,
+        id: mapId,
+      });
+      return waypoints;
+    }
   }
 
   async function adjustMap(dict) {
     setMapId(+dict.id);
+    console.log(dict.id)
     const directionsService = new google.maps.DirectionsService();
     const results = await directionsService.route({
       origin: { lat: +dict.orgLat, lng: +dict.orgLng },
@@ -69,6 +84,7 @@ export default function Map() {
       waypoints: await getWaypoints(+dict.id, setWaypointList),
       optimizeWaypoints: true,
     });
+    // console.log(results.routes);
     setDirectionsResponse(results);
   }
   // ================================================
@@ -77,34 +93,37 @@ export default function Map() {
     const route_name = `${origin.label}--${destination.label}`;
     const originCoords = await getCoordinates(origin.label);
     const destinationCoords = await getCoordinates(destination.label);
-    const originLat = originCoords.lat();
-    const originLng = originCoords.lng();
-    const destLat = destinationCoords.lat();
-    const destLng = destinationCoords.lng();
+    const OLat = originCoords.lat();
+    const OLng = originCoords.lng();
+    const DLat = destinationCoords.lat();
+    const DLng = destinationCoords.lng();
+    setOriginLat(OLat);
+    setDestLat(DLat);
+    setOriginLng(OLng);
+    setDestLng(DLng);
+
     if (!origin.label || !destination.label) {
       return;
     } else {
+      setWaypointList([]);
       const directionsService = new google.maps.DirectionsService();
       const results = await directionsService.route({
-        origin: { lat: originLat, lng: originLng },
-        destination: { lat: destLat, lng: destLng },
+        origin: { lat: OLat, lng: OLng },
+        destination: { lat: DLat, lng: DLng },
         travelMode: google.maps.TravelMode.DRIVING,
         waypoints: [],
         optimizeWaypoints: true,
       });
       setDirectionsResponse(results);
-      let newroutes = await newRoute(
-        route_name,
-        originLat,
-        originLng,
-        destLat,
-        destLng
-      );
+      let newroutes = await newRoute(route_name, OLat, OLng, DLat, DLng);
       if (newroutes.data.success) {
         setRoutes(await newroutes.data.routes);
+        console.log(newroutes.data.routes)
+        // console.log(newroutes.data.routes.length)
         setMapId(
-          await newroutes.data.routes[newroutes.data.routes.length - 1].id
+          newroutes.data.routes[0].id
         );
+
       }
     }
   }
@@ -114,25 +133,31 @@ export default function Map() {
     <>
       <Container>
         <Row>
-          <Col md="auto">
-            <Form onSubmit={(e) => [e.preventDefault(), createMap()]}>
-              <Form.Group controlId="formBasicEmail" md="auto">
-                <Form.Label>Origin</Form.Label>
+          {/* <Col md="auto"> */}
+          <Col >
+            <Form id="form" onSubmit={(e) => [e.preventDefault(), createMap()]}>
+              {/* <Form.Group controlId="formBasicEmail" md="auto"> */}
+              <Form.Group controlId="formBasicEmail" >
+                <Form.Label>Create New Route</Form.Label>
               </Form.Group>
+
               <GooglePlacesAutocomplete
                 selectProps={{
                   origin,
                   onChange: setOrigin,
+                  placeholder: "Origin",
                 }}
               />
-              <Form.Group controlId="formBasicEmail" md="auto">
-                <Form.Label>Destination</Form.Label>
+              {/* <Form.Group controlId="formBasicEmail" md="auto"> */}
+              <Form.Group controlId="formBasicEmail" >
               </Form.Group>
               <GooglePlacesAutocomplete
                 selectProps={{
                   destination,
                   onChange: setDestination,
+                  placeholder: "Destination",
                 }}
+                placeholder={destination}
               />
               <Button type="submit">Submit</Button>
             </Form>
@@ -140,38 +165,45 @@ export default function Map() {
             <div>
               <DropdownButton id="dropdown-basic-button" title="My Routes">
                 {routes.map((trip, index) => (
-                  <Dropdown.Item
-                    key={index}
-                    name={trip.route_name}
-                    onClick={(e) => [
-                      e.preventDefault(),
-                      getWaypoints(trip.id, setWaypointList),
-                      setOriginLat(trip.route_origin_lat),
-                      setOriginLng(trip.route_origin_lng),
-                      setDestLat(trip.route_destination_lat),
-                      setDestLng(trip.route_destination_lng),
-                      adjustMap({
-                        destLat: trip.route_destination_lat,
-                        destLng: trip.route_destination_lng,
-                        orgLat: trip.route_origin_lat,
-                        orgLng: trip.route_origin_lng,
-                        id: trip.id,
-                      }),
-                    ]}
-                  >
-                    {trip.route_name}
-                  </Dropdown.Item>
+                  <>
+                    <Dropdown.Item
+                      key={index}
+                      name={trip.route_name}
+                      onClick={(e) => [
+                        e.preventDefault(),
+                        getWaypoints(trip.id, setWaypointList),
+                        setOriginLat(trip.route_origin_lat),
+                        setOriginLng(trip.route_origin_lng),
+                        setDestLat(trip.route_destination_lat),
+                        setDestLng(trip.route_destination_lng),
+                        adjustMap({
+                          destLat: trip.route_destination_lat,
+                          destLng: trip.route_destination_lng,
+                          orgLat: trip.route_origin_lat,
+                          orgLng: trip.route_origin_lng,
+                          id: trip.id,
+                        }),
+                      ]}
+                    >
+                      {trip.route_name}
+                    </Dropdown.Item>
+                    <DeleteForeverOutlinedIcon
+                      onClick={(e) => [
+                        e.preventDefault(),
+                        deleteTrip(trip, setRoutes),
+                      ]}
+                    />
+                  </>
                 ))}
               </DropdownButton>
 
-              {/* <DeleteForeverOutlinedIcon onClick={(e) => [e.preventDefault(), deleteTrip(trip, setRoutes)]}/> */}
               <br></br>
               {mapId && (
                 <>
                   <Form
-                    onSubmit={(e) => [
+                    onSubmit={async (e) => [
                       e.preventDefault(),
-                      createWaypoint(),
+                      await createWaypoint(),
                       adjustMap({
                         destLat: destLat,
                         destLng: destLng,
@@ -181,7 +213,9 @@ export default function Map() {
                       }),
                     ]}
                   >
-                    <Form.Group controlId="formBasicEmail" md="auto">
+                    {/* <Form.Group controlId="formBasicEmail" md="auto"> */}
+                    <Form.Group controlId="addWaypoint">
+
                       <Form.Label>Add Waypoint</Form.Label>
                     </Form.Group>
                     <GooglePlacesAutocomplete
@@ -189,13 +223,26 @@ export default function Map() {
                         waypoint,
                         onChange: setWaypoint,
                       }}
+                      placeholder={waypoint}
                     />
                     <Button type="submit">Submit</Button>
                   </Form>
                   <h5>Waypoints</h5>
                   <ol>
                     {waypointList.map((waypoint, index) => (
-                      <li key={index}>{waypoint.location}</li>
+                      <li key={index}>{waypoint.location}<DeleteForeverOutlinedIcon
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        await deleteWaypoint(waypoint, mapId, setWaypointList);
+                        adjustMap({
+                          destLat: destLat,
+                          destLng: destLng,
+                          orgLat: originLat,
+                          orgLng: originLng,
+                          id: mapId,
+                        });
+                      }}
+                    /></li>
                     ))}
                   </ol>
                 </>
@@ -211,8 +258,38 @@ export default function Map() {
               {directionsResponse && (
                 <DirectionsRenderer directions={directionsResponse} />
               )}
+              <div>
+                <directionsRenderer directions={directionsResponse} />
+              </div>
             </GoogleMap>
           </Col>
+        </Row>
+        <Row>
+          {directionsResponse && (
+            <Accordion>
+              {directionsResponse.routes[0].legs.map((leg, index) => (
+                <Accordion.Item eventKey={index} index={index}>
+                  <Accordion.Header>
+                    <div>
+                      Start: {leg.start_address} --- End: {leg.end_address} ---{" "}
+                      {leg.distance.text} --- {leg.duration.text}
+                    </div>
+                  </Accordion.Header>
+                  <Accordion.Body>
+                    {leg.steps.map((step, index) => (
+                      <div
+                        id="directions"
+                        dangerouslySetInnerHTML={{
+                          __html: `<p>${step.instructions} --- ${step.distance.text} --- ${step.duration.text}</p>`,
+                        }}
+                        index={index}
+                      ></div>
+                    ))}
+                  </Accordion.Body>
+                </Accordion.Item>
+              ))}
+            </Accordion>
+          )}
         </Row>
       </Container>
     </>

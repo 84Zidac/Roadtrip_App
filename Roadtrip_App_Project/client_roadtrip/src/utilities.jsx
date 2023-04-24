@@ -17,7 +17,7 @@ export const signIn = async (email, password, setUser) => {
   });
 
   setUser({ ...response.data, user: true });
-  console.log(response.data.login);
+  // console.log(response.data.login);
   if (response.data.login) {
   }
 };
@@ -110,26 +110,53 @@ export const newWaypoint = async (mapId, waypointName, Lat, Lng) => {
   return response;
 };
 
-export const getWaypoints = async (mapId, setWaypointList) => {
-  // console.log(mapId)
-  let response = await axios.put("/waypoint/", {
-    id: mapId,
-  });
-  // console.log(response.data.waypoints)
-  let names = [];
+export const getWaypoints = async (mapId, setWaypointList, list=null) => {
+  // console.log(mapId, setWaypointList, list);
+  let response = null
+  if (list) {
+    response = list;
+  } else {
+    response = await axios.put("/waypoint/", {
+      id: mapId,
+    });
+  }
 
+  let names = [];
+  let forGoogle = [];
+  // console.log(response.data)
   response.data.waypoints.forEach(function (waypoint) {
     names.push({
       location: waypoint.waypoint_name,
       stopover: true,
+      id: waypoint.id,
+      routes_id: waypoint.route_waypoints_id
+
     });
   });
   setWaypointList(names);
-  return names;
+  response.data.waypoints.forEach(function (waypoint) {
+    forGoogle.push({
+      location: waypoint.waypoint_name,
+      stopover: true,
+
+
+    });
+  });
+  return forGoogle;
 };
 
 export const deleteTrip = async (trip, setRoutes) => {
   let response = await axios.post('/delete_trip/',trip)
-  console.log(response.data)
+  // console.log(response.data)
   setRoutes(await response.data.routes)
+  window.location.reload(true);
 }
+
+export const deleteWaypoint = async (waypoint, mapId, setWaypointList) => {
+
+  let response = await axios.post('/delete_waypoint/', waypoint)
+
+
+  return getWaypoints(mapId, setWaypointList, response)
+}
+

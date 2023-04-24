@@ -10,3 +10,13 @@ h1 {
 li {
   list-style:disc
 }
+#form{
+  border-style: outset;
+  border-width: 5px;
+  padding-bottom: 15px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+#directions{
+  border-style:ridge;
+}

@@ -57,7 +57,7 @@ def create_route(request):
     originLng = request.data['originLng']
     destLat = request.data['destLat']
     destLng = request.data['destLng']
-    routes = list(Route.objects.filter(user_routes = user[0]).values())
+    routes = list(Route.objects.filter(user_routes = user[0]).order_by('-id').values())
     # print(user)
     try:
         new_Route = Route.objects.create(route_name=route_name, 
@@ -67,7 +67,7 @@ def create_route(request):
                                          route_destination_lng=destLng,
                                          user_routes=user[0])
         new_Route.save()
-        routes = list(Route.objects.filter(user_routes = user[0]).values())
+        routes = list(Route.objects.filter(user_routes = user[0]).order_by('-id').values())
         return JsonResponse({'routes': routes,
                              'success': True})
     except Exception as e:
@@ -78,7 +78,8 @@ def create_route(request):
 def get_routes(request):
     if request.user.is_authenticated:
         user = App_User.objects.filter(email=request.user)
-        routes = list(Route.objects.filter(user_routes = user[0]).values())
+        routes = list(Route.objects.filter(user_routes = user[0]).order_by('-id').values())
+        print(f'routes: {routes}')
         return JsonResponse({'routes': routes,
                              'success': True})
  
@@ -93,7 +94,7 @@ def create_waypoint(request):
     originLat = request.data['Lat']
     originLng = request.data['Lng']
 
-    waypoints = list(Waypoint.objects.filter(route_waypoints = route[0]).values())
+    waypoints = list(Waypoint.objects.filter(route_waypoints = route[0]).order_by('-id').values())
     # print(user)
     try:
         new_Waypoint = Waypoint.objects.create(waypoint_name=route_name, 
@@ -101,7 +102,7 @@ def create_waypoint(request):
                                          longitude=originLng,
                                          route_waypoints=route[0])
         new_Waypoint.save()
-        waypoints = list(Waypoint.objects.filter(route_waypoints = route[0]).values())
+        waypoints = list(Waypoint.objects.filter(route_waypoints = route[0]).order_by('-id').values())
         return JsonResponse({'waypoints': waypoints,
                              'success': True})
     except Exception as e:
@@ -110,16 +111,24 @@ def create_waypoint(request):
                              'success': False})
         
 def get_waypoint(request):
-    if request.user.is_authenticated:
+    # if request.user.is_authenticated:
         try:
-            # print(request.data)
-            route = Route.objects.filter(pk=request.data['id'])
-            waypoints = list(Waypoint.objects.filter(route_waypoints = route[0]).values())
-            # print(waypoints)
-            return JsonResponse({'waypoints': waypoints,
-                                'success': True})           
+            route_id = request.data.get('id')
+            route = Route.objects.filter(pk=route_id).first()
+            waypoints = Waypoint.objects.filter(route_waypoints=route).order_by('id').values()
+            print(waypoints)
+            return JsonResponse({
+                'waypoints': list(waypoints),
+                'success': True,
+            })
+        # try:
+        #     route = Route.objects.filter(pk=request.data['id'])
+        #     waypoints = Waypoint.objects.filter(route_waypoints=route).order_by('id').values()
+        #     # print(waypoints)
+        #     return JsonResponse({'waypoints': waypoints,
+        #                         'success': True})           
         except Exception as e:
-            print(f"exception: {e}")
+            print(f"get_waypoint exception: {e}")
             return JsonResponse({
                 'success': False,
                 'waypoints': []})
