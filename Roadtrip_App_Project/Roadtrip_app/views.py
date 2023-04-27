@@ -5,6 +5,8 @@ from django.contrib.auth import authenticate, login, logout
 from .models import App_User, Route, Waypoint
 from .utilities import sign_up, log_in, curr_user, create_route, get_routes, create_waypoint, get_waypoint
 from django.core.serializers import serialize
+import requests
+
 
 # from django.views.decorators.csrf import csrf_exempt
 
@@ -25,6 +27,7 @@ def user_capabilities(request):
                 print(e)
                 return JsonResponse({"logout":False})
         else:
+            print('trying to sign up')
             return sign_up(request.data)
 
         
@@ -76,6 +79,16 @@ def delete_waypoint(request):
     request_obj.data = {'id': request.data['routes_id']}
     return get_waypoint(request_obj)
 
-
+@api_view(['GET'])
+def get_joke(request):
+    limit = 1
+    api_url = 'https://api.api-ninjas.com/v1/facts?limit={}'.format(limit)
+    response = requests.get(api_url, headers={'X-Api-Key': "###"})
+    if response.status_code == requests.codes.ok:
+        
+        print(response.text)
+        return JsonResponse({'data': response.text})
+    else:
+        print("Error:", response.status_code, response.text)
 
     

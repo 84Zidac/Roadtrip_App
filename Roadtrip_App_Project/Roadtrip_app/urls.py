@@ -8,4 +8,5 @@ urlpatterns =[
     path('waypoint/', views.waypoints_capabilities, name='waypoint_capabilities'),
     path('delete_trip/', views.delete_trip, name='delete_trip'),
     path('delete_waypoint/', views.delete_waypoint, name='delete_waypoint'),
+    path('jokes/', views.get_joke, name='joke'),
 ]

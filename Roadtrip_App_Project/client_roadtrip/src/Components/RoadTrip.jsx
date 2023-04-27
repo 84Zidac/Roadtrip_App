@@ -11,7 +11,7 @@ export function RoadTrip() {
     const libraries =['places'];
 
     const { isLoaded } = useLoadScript({
-        googleMapsApiKey: "###",
+        googleMapsApiKey: '###',
         libraries,
     }
 
@@ -20,7 +20,6 @@ export function RoadTrip() {
         return <div>Loading...</div>
     }
     return (<>
-    <h1>Welcome {user.name}</h1>
     <Map />
     </>)
 }

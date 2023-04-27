@@ -1,12 +1,14 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-export const signUp = async (name, email, password) => {
+export const signUp = async (name, email, password, setSignupSuccess) => {
   let response = await axios.post("/users/", {
     name: name,
     email: email,
     password: password,
   });
+  setSignupSuccess(response.data.success)
+  console.log(response.data.success)
   return response.data.success;
 };
 
@@ -159,4 +161,13 @@ export const deleteWaypoint = async (waypoint, mapId, setWaypointList) => {
 
   return getWaypoints(mapId, setWaypointList, response)
 }
+
+export const Jokes = async (setJoke) => {
+  let response = await axios.get('/jokes/')
+  // console.log(response.data)
+  let joke = JSON.parse(response.data.data)
+  console.log(joke[0].fact)
+  setJoke(joke[0].fact)
+}
+  
 
